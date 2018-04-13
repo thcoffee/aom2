@@ -1,0 +1,95 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+		.lablebg{
+			font-weight:bold;
+			color:#337AB7;
+			text-align:right;
+			vertical-align:center;
+		}
+	</style>
+</head>
+<body>
+{%extends "base.html"%}
+{% block content %}
+<script type="text/javascript" src="/static/js/review.js"></script>
+<div class="panel panel-default panel-primary" style="margin-top:0px;">
+    <div class="panel-heading"><span class="glyphicon glyphicon-edit" style="font-weight:bold;"> 审核监控警告</span></div>
+	<form class="form-horizontal" role="form">
+		<table class="table table-striped">
+			<tbody>
+				<tr>
+					<td width="10%" class="lablebg">&nbsp;警告ID：</td>
+					<td width="4%" id="warnid"></td>
+					<td width="10%" class="lablebg">警告类别：</td>
+					<td width="5%" id="warntype"></td>
+				</tr>
+				<tr>
+					<td class="lablebg">系统环境：</td>
+					<td id="enviname"></td>
+					<td class="lablebg">警告等级：</td>
+					<td id="warnlevel"></td
+				</tr>
+				<tr>
+					<td class="lablebg">警告描述：</td>
+					<td colspan="3" id="warndesc" style="word-wrap:break-word;word-break:break-all;"></td>
+				</tr>
+					<tr>
+					<td class="lablebg">发生时间：</td>
+					<td colspan="3" id="createtime"></td>
+				</tr>
+				<tr>
+					<td class="lablebg">恢复时间：</td>
+					<td colspan="3" id="recoverytime"></td>
+				</tr>
+				<tr>
+					<td class="lablebg">问题原因：</td>
+					<td colspan="3" id="reason" style="word-wrap:break-word;word-break:break-all;"></td>
+				</tr>
+				<tr>
+					<td class="lablebg">解决及预防措施：</td>
+					<td colspan="3" id="measure" style="word-wrap:break-word;word-break:break-all;"></td>
+				</tr>
+				<tr>
+					<td class="lablebg">审核意见：</td>
+					<td colspan="3">
+						<textarea id="warntaskMsg" class="form-control padtop" rows="2"></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="4">
+						<ul class="pager" style="margin-top:7px;height:10px;">
+							<li style="height:20px;"><a href="#" style="background-color:#337AB7;width:100px;color:#FFF;" onmouseover="this.style.cssText='color:#00F;background-color:#337AB7;width:100px;font-weight:bold;'" onmouseout="this.style.cssText='color:#FFF;background-color:#337AB7;width:100px;'" onclick="agree()">同意</a></li>
+							<li style="height:20px;"><a href="#" style="background-color:#337AB7;width:100px;color:#FFF;" onmouseover="this.style.cssText='color:#00F;background-color:#337AB7;width:100px;font-weight:bold;'" onmouseout="this.style.cssText='color:#FFF;background-color:#337AB7;width:100px;'" onclick="unagree()">不同意</a></li>
+						</ul>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<input type="hidden" id="messid" value="">
+		<input type="hidden" id="getid" value="">
+	</form>
+	</div>
+</div>
+<div class="panel panel-default panel-primary">
+	<div class="panel-heading" style="float:left;width:100%;top:0px;"><span class="glyphicon glyphicon-ok" style="font-weight:bold;">&nbsp;</span>审核意见列表</div>
+		<table id="reviewList" class="table table-striped" style="font-size:12px;">
+			<thead>
+				<tr>
+					<th width='10%' style="text-align:center;">序号</th>
+					<th width='20%' style="text-align:center;">审核人</th>
+					<th width='50%' style="text-align:center;">审核意见</th>
+					<th width='20%' style="text-align:center;">审核时间</th>
+				</tr>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endblock %}
+</body>
+</html>
