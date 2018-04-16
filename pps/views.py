@@ -24,6 +24,11 @@ def undo(request):
 def dowarn(request):
     return render(request, 'dowarn.html',{})
 
+#查看预警信息
+@login_required(login_url="/admin/login/")
+def querywarn(request):
+    return render(request, 'querywarn.html',{})
+
 #审核    
 @login_required(login_url="/admin/login/")     
 def review(request):

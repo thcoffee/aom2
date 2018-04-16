@@ -4,7 +4,6 @@ if (url.indexOf("?") != -1) {
 	var str = url.substr(1);
 	getid = str.split("=")[1]; 
 } 
-$("#agree").css("background-color","red"); 
 $(document).ready(
 			$.ajax({
 			url:"/pps/putdata/",
@@ -105,6 +104,6 @@ function callback(result){
 		+ "</td><td style='text-align:center;'>"
 		+ data[i].createtime
 		+ "</td></tr>");
-	}	
+	}
 }
 

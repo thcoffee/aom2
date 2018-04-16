@@ -9,4 +9,5 @@ url('putdata/',views.putdata,name='putdata'),
 url('test/',views.test,name='test'),
 url('dowarn/', views.dowarn, name='dowarn'),
 url('review/', views.review, name='review'),
+url('querywarn/', views.querywarn, name='querywarn'),
 ]
