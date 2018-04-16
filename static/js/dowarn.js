@@ -25,6 +25,8 @@ function callbackdowarn(result){
 	$("#warndesc").text(result.warndesc);
 	$("#createtime").text(result.createtime);
 	$("#recoverytime").text(result.recoverytime);
+	$("#reason").text(result.reason);
+	$("#measure").text(result.measure);
 	$("#messid").val(result.messid);
 	$("#getid").val(getid);
 	

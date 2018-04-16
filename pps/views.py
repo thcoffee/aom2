@@ -5,29 +5,36 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 import traceback
 import json
-from aom import db
+import time
+from . import ppsdb
 # Create your views here.
+
+#首页
 @login_required(login_url="/admin/login/") 
 def index(request):
     return HttpResponse('''<meta http-equiv="refresh" content="0;url=/pps/undo/">''')
 
+#待处理消息
 @login_required(login_url="/admin/login/")     
 def undo(request):
     return render(request, 'undo.html',{})
 
+#处理预警消息
 @login_required(login_url="/admin/login/")     
 def dowarn(request):
     return render(request, 'dowarn.html',{})
-    
+
+#审核    
 @login_required(login_url="/admin/login/")     
 def review(request):
     return render(request, 'review.html',{})
-    	
+ 
+@login_required(login_url="/admin/login/")      
 @csrf_exempt	
 def getdata(request):
     return HttpResponse(json.dumps({"name":"liuyanli"}), content_type='application/json')	
 	
-#@login_required(login_url="/admin/login/") 	
+@login_required(login_url="/admin/login/") 	
 @csrf_exempt		
 def putdata(request):
     #print(request.POST.get('task'))
@@ -49,58 +56,48 @@ def putdata(request):
 def test(request):
     return render(request, 'test.html',{'id':'hell'})
 
+
+#获取审批页面信息    
 def _putAudJson(request):
     try:
-        dbcon=db.opMysqlObj(**{'dbname':'default','valueType':'dict'})
-        
-        sql="update pps_message set status=2,completetime=now() where id=%s"%(request.POST.get('messid'))
-        print(sql)
-        dbcon.putData(sql=sql)
-        
-        sql="insert into pps_warntask_message(createtime,message,wid,uid,status) values(now(),'%s',%s,1,%s) "%(request.POST.get('warntaskMsg'),request.POST.get('id'),request.POST.get('status'))
-        print(sql)
-        dbcon.putData(sql=sql)
-        if request.POST.get('status')==1:
-            sql="update pps_warntask set status=3 where status=2 and id=%s"%(request.POST.get('id'))
-            print(sql)
-            dbcon.putData(sql=sql)
+        dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
+        warnTaskCount=dbcon.getWarnTaskCountForUpdate(**{'id':request.POST.get('id',0),'status':2})
+        if warnTaskCount!=0:
+            dbcon.setMessStatus(**{'fromstatus':1,'tostatus':2,'messid':request.POST.get('messid')})
+            dbcon.createWarnTaskMess(**{'warntaskMsg':request.POST.get('warntaskMsg'),'id':request.POST.get('id',0),'status':request.POST.get('status')})
+            if request.POST.get('status')=='1':
+                dbcon.setWarnTaskStatus(**{'fromstatus':2,'tostatus':3,'id':request.POST.get('id',0)})
+            else:
+                dbcon.setWarnTaskStatus(**{'fromstatus':2,'tostatus':1,'id':request.POST.get('id',0)})
+                dbcon.createMess(**{'activityname':'重新处理','path':'/pps/dowarn/?id='+request.POST.get('id'),'userid':1})
+                dbcon.setWarnTaskMessId(**{'lastid':dbcon.getLaseID()['lastid'],'id':request.POST.get('id',0)})
+            dbcon.commit()
+            warntaskMsg=dbcon.getWarnTaskMessS(**{'id':request.POST.get('id',0)})
+            dbcon.close()
+            return_json={'status':'true','warntaskMsg':warntaskMsg}
         else:
-            sql="update pps_warntask set status=1 where status=2 and id=%s"%(request.POST.get('id'))
-            print(sql)
-            dbcon.putData(sql=sql)
-            sql="insert into  pps_message (createtime,activityname,path,userid,status)values(now(),'%s','%s',%s,1)"%('重新处理','/pps/dowarn/?id='+request.POST.get('id'),1)
-            print(sql)
-            dbcon.putData(sql=sql)
-            sql="update pps_warntask set messid=%s where id=%s"%(dbcon.getLaseID()['lastid'],request.POST.get('id'))
-            print(sql)
-            dbcon.putData(sql=sql)
-        dbcon.commit()
-        sql="SELECT date_format(p.createtime, '%Y-%m-%d %H:%i:%s') createtime,p.message,a.first_name name,CASE WHEN p.status=1 THEN '不同意' ELSE '同意'  END STATUS  FROM pps_warntask_message p LEFT JOIN auth_user a ON p.uid=a.id where wid='"+request.POST.get('id')+"'ORDER BY createtime "
-        warntaskMsg=dbcon.getData(**{'sql':sql}) 
-        dbcon.close()
-        return_json={'status':'true','warntaskMsg':warntaskMsg}
+            dbcon.commit()
+            dbcon.close()
+            return_json={'status':'false','warntaskMsg':[]}
+            
     except Exception as info: 
         print(traceback.format_exc())
-        return_json={'status':'false'}
+        return_json={'status':'false','warntaskMsg':[]}
+    print(return_json)
     return(return_json)    
-    
+
+
+
+#提交处理预警信息表单信息    
 def _putWarnJson(request):
     try:
-        dbcon=db.opMysqlObj(**{'dbname':'default','valueType':'dict'})
-        sql="update pps_warntask set reason='%s',measure='%s',writetime=now(),status=2 where status=1 and id=%s"%(request.POST.get('reason'),request.POST.get('measure'),request.POST.get('id'))
-        print(sql)
-        dbcon.putData(sql=sql)
-        sql="update pps_message set status=2,completetime=now() where id=%s"%(request.POST.get('messid'))
-        dbcon.putData(sql=sql)
-        print(sql)
-        sql="insert into  pps_message (createtime,activityname,path,userid,status)values(now(),'%s','%s',%s,1)"%('待审核','/pps/review/?id='+request.POST.get('id'),1)
-        print(sql)
-        dbcon.putData(sql=sql)
-        #lastid=dbcon.getLaseID()
-       # print(lastid)
-        sql="update pps_warntask set messid=%s where id=%s"%(dbcon.getLaseID()['lastid'],request.POST.get('id'))
-        print(sql)
-        dbcon.putData(sql=sql)
+        dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
+        warnTaskCount=dbcon.getWarnTaskCountForUpdate(**{'id':request.POST.get('id'),'status':1})
+        if warnTaskCount!=0:
+            dbcon.setWarnTaskInfo(**{'reason':request.POST.get('reason'),'measure':request.POST.get('measure'),'id':request.POST.get('id')})
+            dbcon.setMessStatus(**{'fromstatus':1,'tostatus':2,'messid':request.POST.get('messid')})
+            dbcon.createMess(**{'activityname':'待审核','path':'/pps/review/?id='+request.POST.get('id'),'userid':1})
+            dbcon.setWarnTaskMessId(**{'lastid':dbcon.getLaseID()['lastid'],'id':request.POST.get('id')})
         dbcon.commit()
         dbcon.close()
         return_json={'status':'true'}
@@ -108,43 +105,27 @@ def _putWarnJson(request):
         print(traceback.format_exc())
         return_json={'status':'false'}
     return(return_json)
-	
-def _getWarnJson(request):
-    dbcon=db.opMysqlObj(**{'dbname':'default','valueType':'dict'})
-    sql="select id,warnid,warntype,enviname,warndesc,warnlevel,date_format(createtime, '%Y-%m-%d %H:%i:%s') createtime,date_format(recoverytime, '%Y-%m-%d %H:%i:%s') recoverytime,reason,measure,date_format(writetime, '%Y-%m-%d %H:%i:%s') writetime,status,messid,userid from pps_warntask where id='"+request.POST.get('id')+"'"
-    
-    temp=dbcon.getData(**{'sql':sql})
-    
-    if len(temp)>0:
-        return_json=temp[0]
-    else:
-        return_json={}
-    sql="SELECT date_format(p.createtime, '%Y-%m-%d %H:%i:%s') createtime,p.message,a.first_name name,CASE WHEN p.status=1 THEN '不同意' ELSE '同意'  END STATUS  FROM pps_warntask_message p LEFT JOIN auth_user a ON p.uid=a.id where wid='"+request.POST.get('id')+"'ORDER BY createtime "
-    if request.POST.get('task')=='getwarn':
-        sql=sql+' desc'
 
-    temp1=dbcon.getData(**{'sql':sql}) 
-    if len(temp1)>0:
-        if request.POST.get('task')=='getwarn':
-            return_json['warntaskMsg']=temp1[0]
-        elif request.POST.get('task')=='getaut':
-            return_json['warntaskMsg']=temp1
-    else:
-        if request.POST.get('task')=='getwarn':
-            return_json['warntaskMsg']={} 
-        elif request.POST.get('task')=='getaut':
-            return_json['warntaskMsg']=[]
+
+#获取处理预警信息表单信息
+def _getWarnJson(request):
+    dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
+    return_json=dbcon.getWarnTask(**{'id':request.POST.get('id')})
+    if request.POST.get('task')=='getwarn':
+        return_json['warntaskMsg']=dbcon.getWarnTaskMess(**{'id':request.POST.get('id')})
+    elif request.POST.get('task')=='getaut':
+        return_json['warntaskMsg']=dbcon.getWarnTaskMessS(**{'id':request.POST.get('id')})
     print(return_json)    
     return(return_json)
-    
+
+
+#获取未处理消息
+
 def _getUndoJson(request):	
-    temp=[]
-    for i in range(30):
-        temp.append(['预警'+str(i),'2018-01-'+str(i)+' 00:00:00'])
-    dbcon=db.opMysqlObj(**{'dbname':'default','valueType':'dict'})	
-    temp=dbcon.getData(**{'sql':"select activityname,date_format(createtime, '%Y-%m-%d %H:%i:%s') createtime,path from pps_message where status=1 order by createtime desc"})
-    p=_my_pagination(request,temp,request.POST.get('display_num',5))
-    return_json={'list':p['list'],'undo_num':len(temp),'num_pages':p['num_pages']}	
+    dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})	
+    undoList=dbcon.getUndoMess(**{})
+    p=_my_pagination(request,undoList,request.POST.get('display_num',5))
+    return_json={'list':p['list'],'undo_num':len(undoList),'num_pages':p['num_pages']}	
     print(return_json)
     return(return_json)
 	

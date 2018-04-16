@@ -31,7 +31,7 @@ function callbackundo(result){
 	if( data.length == 0 ){
 		$("#undoList tbody")
 		.append("<tr><td colspan='2' align='center'><img src='/static/img/coffe.png'></img></td></tr>"
-		+ "<tr><td colspan='2' align='center'>您没有待处理工作啦！休息一会吧！</td></tr>");
+		+ "<tr><td colspan='2' align='center'>&nbsp;您没有待处理工作啦！休息一会吧！</td></tr>");
 			
 		$("#page").css("display","none");	
 	}

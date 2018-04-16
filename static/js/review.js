@@ -4,7 +4,7 @@ if (url.indexOf("?") != -1) {
 	var str = url.substr(1);
 	getid = str.split("=")[1]; 
 } 
-
+$("#agree").css("background-color","red"); 
 $(document).ready(
 			$.ajax({
 			url:"/pps/putdata/",
@@ -51,8 +51,8 @@ function agree(){
 	var getid=$("#getid").val();
 	if(warntaskMsg.trim() == ""){
 		warntaskMsg="同意！";
+		$("#warntaskMsg").text(warntaskMsg);
 	}
-	
 	$.ajax({
 			url:"/pps/putdata/",
 			data:{
@@ -74,8 +74,8 @@ function unagree(){
 	var getid=$("#getid").val();
 	if(warntaskMsg.trim() == ""){
 		warntaskMsg="不同意！";
+		$("#warntaskMsg").text(warntaskMsg);
 	}
-	
 	$.ajax({
 			url:"/pps/putdata/",
 			data:{
@@ -100,7 +100,7 @@ function callback(result){
 		+ Number(i+1)
 		+ "</td><td style='text-align:center;'>"
 		+ data[i].name
-		+ "</td><td>"
+		+ "</td><td style='word-wrap:break-word;word-break:break-all;'>"
 		+ data[i].message
 		+ "</td><td style='text-align:center;'>"
 		+ data[i].createtime
