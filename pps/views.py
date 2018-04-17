@@ -29,6 +29,12 @@ def dowarn(request):
 def querywarn(request):
     return render(request, 'querywarn.html',{})
 
+
+#查看预警信息
+@login_required(login_url="/admin/login/")
+def querywarninfo(request):
+    return render(request, 'querywarninfo.html',{})
+
 #审核    
 @login_required(login_url="/admin/login/")     
 def review(request):
@@ -55,6 +61,8 @@ def putdata(request):
         return HttpResponse(json.dumps(_putWarnJson(request)), content_type='application/json') 
     elif request.POST.get('task')=='putaud':
         return HttpResponse(json.dumps(_putAudJson(request)), content_type='application/json') 
+    elif request.POST.get('task')=='putquerywarn':
+        return HttpResponse(json.dumps(_getQueryWarn(request)), content_type='application/json') 
     else:
         return HttpResponse(json.dumps({"name":"liuyanli"}), content_type='application/json')
 		
@@ -62,6 +70,14 @@ def test(request):
     return render(request, 'test.html',{'id':'hell'})
 
 
+def _getQueryWarn(request):
+    temp=[]
+    for i in range(123):
+        temp.append({'warndesc':'预警'+str(i),'createtime':time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()+(86448*i))),'status':'完成'})
+    p=_my_pagination(request,temp,request.POST.get('display_num',5))
+    return_json={'list':p['list'],'total_num':len(temp),'num_pages':p['num_pages']}   
+    return(return_json)
+    
 #获取审批页面信息    
 def _putAudJson(request):
     try:

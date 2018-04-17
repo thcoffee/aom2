@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+		.lablebg{
+			font-weight:bold;
+			color:#337AB7;
+			text-align:right;
+			vertical-align:center;
+		}
+	</style>
+</head>
+<body>
+{%extends "base.html"%}
+{% block content %}
+<script type="text/javascript" src="/static/js/querywarninfo.js"></script>
+<div class="panel panel-default panel-primary" style="margin-top:0px;">
+    <div class="panel-heading"><span class="glyphicon glyphicon-edit" style="font-weight:bold;"> 处理监控警告</span></div>
+	<form class="form-horizontal" role="form">
+		<table class="table table-striped">
+			<tbody>
+				<tr>
+					<td width="10%" class="lablebg">&nbsp;警告ID：</td>
+					<td width="4%" id="warnid"></td>
+					<td width="10%" class="lablebg">警告类别：</td>
+					<td width="5%" id="warntype"></td>
+				</tr>
+				<tr>
+					<td class="lablebg">系统环境：</td>
+					<td id="enviname"></td>
+					<td class="lablebg">警告等级：</td>
+					<td id="warnlevel"></td
+				</tr>
+				<tr>
+					<td class="lablebg">警告描述：</td>
+					<td colspan="3" id="warndesc" style="word-wrap:break-word;word-break:break-all;"></td>
+				</tr>
+					<tr>
+					<td class="lablebg">发生时间：</td>
+					<td colspan="3" id="createtime"></td>
+				</tr>
+				<tr>
+					<td class="lablebg">恢复时间：</td>
+					<td colspan="3" id="recoverytime"></td>
+				</tr>
+				<tr>
+					<td class="lablebg">问题原因：</td>
+					<td id="reason" colspan="3" style="word-wrap:break-word;word-break:break-all;"></td>
+				</tr>
+				<tr>
+					<td class="lablebg">解决及预防措施：</td>
+					<td id="measure" colspan="3" style="word-wrap:break-word;word-break:break-all;"></td>
+				</tr>
+				<tr id="suggest">
+					<td class="lablebg">审核意见：</td>
+					<td colspan="3" id="warntaskMsg" style="word-wrap:break-word;word-break:break-all;"></td>
+				</tr>
+			</tbody>
+		</table>
+		<input type="hidden" id="messid" value="">
+		<input type="hidden" id="getid" value="">
+	</form>
+</div>
+{% endblock %}
+</body>
+</html>
