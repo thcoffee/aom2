@@ -11,4 +11,5 @@ url('dowarn/', views.dowarn, name='dowarn'),
 url('review/', views.review, name='review'),
 url('querywarn/', views.querywarn, name='querywarn'),
 url('querywarninfo/', views.querywarninfo, name='querywarninfo'),
+url('tjwarn/', views.tjwarn, name='tjwarn'),
 ]

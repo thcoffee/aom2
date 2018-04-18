@@ -17,7 +17,7 @@
 //
 
 $(document).ready($.ajax({url:"http://10.68.3.99:8080/pps/putdata/",  
-           data:{'task':'putquerywarn','display_num':5,'page':3},
+           data:{'task':'gettjwarn','display_num':5,'page':3},
            dataType:"json",
            type:"POST",
            success:dz,

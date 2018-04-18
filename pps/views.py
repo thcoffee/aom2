@@ -24,7 +24,7 @@ def undo(request):
 def dowarn(request):
     return render(request, 'dowarn.html',{})
 
-#查看预警信息
+#查看预警列表信息
 @login_required(login_url="/admin/login/")
 def querywarn(request):
     return render(request, 'querywarn.html',{})
@@ -39,6 +39,11 @@ def querywarninfo(request):
 @login_required(login_url="/admin/login/")     
 def review(request):
     return render(request, 'review.html',{})
+
+#审核
+@login_required(login_url="/admin/login/")
+def tjwarn(request):
+    return render(request, 'tjwarn.html',{})
  
 @login_required(login_url="/admin/login/")      
 @csrf_exempt	
@@ -63,6 +68,10 @@ def putdata(request):
         return HttpResponse(json.dumps(_putAudJson(request)), content_type='application/json') 
     elif request.POST.get('task')=='putquerywarn':
         return HttpResponse(json.dumps(_getQueryWarn(request)), content_type='application/json') 
+    elif request.POST.get('task')=='getquerywarninfo':
+        return HttpResponse(json.dumps(_getWarnJson(request)), content_type='application/json') 
+    elif request.POST.get('task')=='gettjwarn':
+        return HttpResponse(json.dumps(_getTjwarn(request)), content_type='application/json')     
     else:
         return HttpResponse(json.dumps({"name":"liuyanli"}), content_type='application/json')
 		
@@ -70,10 +79,17 @@ def test(request):
     return render(request, 'test.html',{'id':'hell'})
 
 
+def _getTjwarn(request):
+    dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
+    return_json=dbcon.getStatistics(**{})
+    print(return_json)
+    return(return_json)    
 def _getQueryWarn(request):
     temp=[]
     for i in range(123):
-        temp.append({'warndesc':'预警'+str(i),'createtime':time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()+(86448*i))),'status':'完成'})
+        temp.append({'warndesc':'预警'+str(i),'createtime':time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()+(86448*i))),'status':'完成','url':'/pps/querywarninfo/?id='+str(i)})
+    dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
+    temp=dbcon.getQueryWarn(**{'id':request.POST.get('id')})
     p=_my_pagination(request,temp,request.POST.get('display_num',5))
     return_json={'list':p['list'],'total_num':len(temp),'num_pages':p['num_pages']}   
     return(return_json)
@@ -132,7 +148,7 @@ def _putWarnJson(request):
 def _getWarnJson(request):
     dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
     return_json=dbcon.getWarnTask(**{'id':request.POST.get('id')})
-    if request.POST.get('task')=='getwarn':
+    if request.POST.get('task')=='getwarn' or request.POST.get('task')=='getquerywarninfo':
         return_json['warntaskMsg']=dbcon.getWarnTaskMess(**{'id':request.POST.get('id')})
     elif request.POST.get('task')=='getaut':
         return_json['warntaskMsg']=dbcon.getWarnTaskMessS(**{'id':request.POST.get('id')})

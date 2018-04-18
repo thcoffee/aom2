@@ -6,6 +6,22 @@ class opMysqlObj(db.opMysqlObj):
     def __init__(self,**kwages):
         db.opMysqlObj.__init__(self,**kwages)
         
+    def getStatistics(self,**kwages):
+        sql1="SELECT warntype,COUNT(*) count FROM pps_warntask GROUP BY warntype"
+        sql2="SELECT enviname,COUNT(*) count FROM pps_warntask GROUP BY enviname"
+        sql3="SELECT warnlevel,COUNT(*) count FROM pps_warntask GROUP BY warnlevel" 
+        return_json={}        
+        return_json['warntype']=self.getData(**{'sql':sql1})
+        return_json['enviname']=self.getData(**{'sql':sql2})
+        return_json['warnlevel']=self.getData(**{'sql':sql3})
+        return(return_json)
+        
+    def getQueryWarn(self,**kwages):
+       #print(str(kwages['id']))
+        sql="SELECT CONCAT(substring(warndesc,1,30),'......') warndesc,date_format(createtime,'%Y-%m-%d %H:%i:%s') createtime,case when status=1 then '待处理' when status=2 then '待审核'  when status=3 then '已完成' end status,CONCAT('/pps/querywarninfo/?id=',id) url FROM pps_warntask order by createtime desc"
+        print(sql)
+        return(self.getData(**{'sql':sql}))
+        
     def getWarnTaskCountForUpdate(self,**kwages):
         sql="select count(*) count from pps_warntask  where status=%s and id=%s for update"%(kwages['status'],kwages['id'])
         print(sql)
@@ -13,6 +29,7 @@ class opMysqlObj(db.opMysqlObj):
         
     def setMessStatus(self,**kwages):
         sql="update pps_message set status=%s,completetime=now() where status=%s and id=%s"%(kwages['tostatus'],kwages['fromstatus'],kwages['messid'])
+        print(sql)
         self.putData(**{'sql':sql})
     
     def createWarnTaskMess(self,**kwages):

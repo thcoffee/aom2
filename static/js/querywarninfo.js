@@ -4,20 +4,19 @@ if (url.indexOf("?") != -1) {
 	var str = url.substr(1);
 	getid = str.split("=")[1]; 
 } 
-
 $(document).ready(
 			$.ajax({
 			url:"/pps/putdata/",
 			data:{
-				task:'getwarn',
+				task:'getquerywarninfo',
 				id:getid,
 			},
 			dataType:"json",
 			type:"POST",
-			success:callbackdowarn,}
+			success:callback,}
 ))
 
-function callbackdowarn(result){
+function callback(result){
 	$("#warnid").text(result.warnid);
 	$("#warntype").text(result.warntype);
 	$("#enviname").text(result.enviname);

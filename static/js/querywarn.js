@@ -22,7 +22,7 @@ function callbackquery(result){
 	$("#queryList tbody").empty();
 	var bg="";
 	for(var i=0;i<data.length;i++){
-		if(data[i].status == '完成'){
+		if(data[i].status == '已完成'){
 			bg='success';
 		}else{
 			bg='warning';
@@ -75,7 +75,11 @@ function callbackquery(result){
 
 	//点击第一页触发
 	$("#pageGro .first").click(function(){
-		page_icon(1,5,0);
+		if(pageCount>5){
+			page_icon(1,5,0);
+		}else{
+			page_icon(1,pageCount,0);
+		}
 		$("#currentpage").val('1');
 		$.ajax({
 			url:"/pps/putdata/",
@@ -92,7 +96,11 @@ function callbackquery(result){
 	
 	//点击最后一页触发
 	$("#pageGro .tail").click(function(){
-		page_icon(pageCount-4,pageCount,4);
+		if(pageCount>5){
+			page_icon(pageCount-4,pageCount,4);
+		}else{
+			page_icon(1,pageCount,0);
+		}
 		$("#currentpage").val(pageCount);
 		$.ajax({
 			url:"/pps/putdata/",
@@ -249,7 +257,7 @@ function callback(result){
 	$("#queryList tbody").empty();
 	var bg="";
 	for(var i=0;i<data.length;i++){
-		if(data[i].status == '完成'){
+		if(data[i].status == '已完成'){
 			bg='success';
 		}else{
 			bg='warning';
