@@ -1,9 +1,11 @@
+$("#but11").innerHtml="<input type='button' value='添加'>";
 var url = location.search;
 var getid = ""
 if (url.indexOf("?") != -1) {  
 	var str = url.substr(1);
 	getid = str.split("=")[1]; 
-} 
+}
+
 $(document).ready(
 			$.ajax({
 			url:"/pps/putdata/",

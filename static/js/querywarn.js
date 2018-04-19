@@ -30,7 +30,7 @@ function callbackquery(result){
 		$("#queryList tbody")
 		.append("<tr class='"
 		+ bg
-		+ "'><td width='40%'>"
+		+ "'><td width='40%'><span class='glyphicon glyphicon-fire'>&nbsp;</span>"
 		+ data[i].warndesc
 		+ "</td><td style='text-align:center;'>"
 		+ data[i].createtime
@@ -265,7 +265,7 @@ function callback(result){
 		$("#queryList tbody")
 		.append("<tr class='"
 		+ bg
-		+ "'><td>"
+		+ "'><td><span class='glyphicon glyphicon-fire'>&nbsp;</span>"
 		+ data[i].warndesc
 		+ "</td><td style='text-align:center;'>"
 		+ data[i].createtime

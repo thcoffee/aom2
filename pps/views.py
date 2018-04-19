@@ -9,13 +9,46 @@ import time
 from . import ppsdb
 # Create your views here.
 
-#首页
-@login_required(login_url="/admin/login/") 
+#页面访问权限验证妆饰器
+def _auth_page(view): 
+    
+    def _checkauth(**kwargs):
+        dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
+        print(dbcon.isExistsUser(**{'username':kwargs['username']}))
+        if dbcon.isExistsUser(**{'username':kwargs['username']})>0:
+            return(True)
+        else:
+            return(False)
+    
+        
+    def aauth(request, *args, **kwargs): 
+        print(request.read())
+        request.user.username=request.GET.get('username')
+        return view(request, *args, **kwargs)
+        
+    @login_required(login_url="/admin/login/")      
+    def mauth(request, *args, **kwargs):    
+        return view(request, *args, **kwargs)
+    
+    def main(request, *args, **kwargs)  :  
+        if _checkauth(**{'username':request.GET.get('username')}):    
+            print('auto')    
+            return aauth(request, *args, **kwargs)  
+        else:
+            return mauth(request, *args, **kwargs)  
+    return main
+
+
+
+#首页 
+
+@_auth_page
 def index(request):
     return HttpResponse('''<meta http-equiv="refresh" content="0;url=/pps/undo/">''')
 
 #待处理消息
-@login_required(login_url="/admin/login/")     
+@_auth_page  
+#@login_required(login_url="/admin/login/")
 def undo(request):
     return render(request, 'undo.html',{})
 
@@ -81,9 +114,10 @@ def test(request):
 
 def _getTjwarn(request):
     dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
-    return_json=dbcon.getStatistics(**{})
+    return_json=dbcon.getStatistics(**{'begindate':request.POST.get('begindate'),'enddate':request.POST.get('enddate')})
     print(return_json)
-    return(return_json)    
+    return(return_json)  
+    
 def _getQueryWarn(request):
     temp=[]
     for i in range(123):

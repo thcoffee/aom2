@@ -1,15 +1,32 @@
 from aom import db
 import pymysql
+import time
 
 class opMysqlObj(db.opMysqlObj):
 
     def __init__(self,**kwages):
         db.opMysqlObj.__init__(self,**kwages)
         
+        
+    def isExistsUser(self,**kwages):
+        sql="select count(*) count from auth_user where username='%s'"%(kwages['username'])
+        print(sql)
+        return(self.getData(**{'sql':sql})[0]['count'])
+        
     def getStatistics(self,**kwages):
-        sql1="SELECT warntype,COUNT(*) count FROM pps_warntask GROUP BY warntype"
-        sql2="SELECT enviname,COUNT(*) count FROM pps_warntask GROUP BY enviname"
-        sql3="SELECT warnlevel,COUNT(*) count FROM pps_warntask GROUP BY warnlevel" 
+        if kwages['begindate']!='':
+            begindate=kwages['begindate']
+        else:
+            begindate=time.strftime('%Y-%m-%d', time.localtime(time.time()-(86448*7)))   
+        if kwages['enddate']!='':
+            enddate=kwages['enddate']+' 23:59:59'
+        else:
+            enddate=time.strftime('%Y-%m-%d', time.localtime(time.time()) ) 
+                      
+        sql1="SELECT warntype,COUNT(*) count FROM pps_warntask where createtime <='%s' and  createtime >='%s' GROUP BY warntype"%(enddate,begindate)
+        sql2="SELECT enviname,COUNT(*) count FROM pps_warntask where createtime <='%s' and  createtime >='%s' GROUP BY enviname"%(enddate,begindate)
+        sql3="SELECT warnlevel,COUNT(*) count FROM pps_warntask where createtime <='%s' and  createtime >='%s' GROUP BY warnlevel" %(enddate,begindate)
+        print(kwages,sql1,sql2,sql3)
         return_json={}        
         return_json['warntype']=self.getData(**{'sql':sql1})
         return_json['enviname']=self.getData(**{'sql':sql2})
