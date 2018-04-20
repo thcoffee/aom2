@@ -20,6 +20,19 @@ class opMysqlObj(object):
         #print(temp2)
         self.db=pymysql.connect(**temp2)
     
+    def usernameToUserid(self,**kwages):
+        sql="select id from auth_user where username='%s'"%(kwages['username'])        
+        return(self.getData(**{'sql':sql})[0]['id'])
+        
+    def isExistsUser(self,**kwages):
+        sql="select count(*) count from auth_user where username='%s'"%(kwages['username'])
+        return(self.getData(**{'sql':sql})[0]['count'])
+    
+    def createMess(self,**kwages):
+        sql="insert into  pps_message (createtime,activityname,path,userid,status)values(now(),'%s','%s',%s,1)"%(kwages['activityname'],kwages['path'],kwages['userid'])
+        #print(sql)
+        self.putData(**{'sql':sql})
+        
     def getLaseID(self):
         return(self.getData(**{'sql':'SELECT LAST_INSERT_ID() lastid'})[0])
     

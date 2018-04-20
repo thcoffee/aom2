@@ -45,7 +45,7 @@ class AuthGroup(models.Model):
         
 class PpsAuditGroup(models.Model):
     gid = models.ForeignKey(AuthGroup, models.DO_NOTHING, related_name='gid',db_column='gid', blank=True, null=True,verbose_name='被审核组')
-    agid = models.ForeignKey(AuthGroup, models.DO_NOTHING,related_name='agid', db_column='agid', blank=True, null=True,verbose_name='审核组')
+    uid = models.ForeignKey(AuthUser, models.DO_NOTHING, db_column='uid', blank=True, null=True,verbose_name='审核人')
 
     class Meta:
         managed = False
@@ -53,4 +53,19 @@ class PpsAuditGroup(models.Model):
         verbose_name_plural='审核组设置'  
         verbose_name='审核组设置' 
     def __str__(self):
-        return("/".join([str(self.gid),str(self.agid)]))        
+        return("/".join([str(self.gid),str(self.uid)]))     
+
+
+
+class PpsWarnlevel(models.Model):
+    level = models.IntegerField(blank=True, null=True,verbose_name='预警等级ID')
+    levelname = models.CharField(max_length=30, blank=True, null=True,verbose_name='预警等级名字')
+
+    class Meta:
+        managed = False
+        db_table = 'pps_warnlevel'
+        verbose_name_plural='预警等级设置'  
+        verbose_name='预警等级设置'   
+
+    def __str__(self):
+        return("/".join([str(self.level),str(self.levelname)]))         

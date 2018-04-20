@@ -8,11 +8,6 @@ class opMysqlObj(db.opMysqlObj):
         db.opMysqlObj.__init__(self,**kwages)
         
         
-    def isExistsUser(self,**kwages):
-        sql="select count(*) count from auth_user where username='%s'"%(kwages['username'])
-        print(sql)
-        return(self.getData(**{'sql':sql})[0]['count'])
-        
     def getStatistics(self,**kwages):
         if kwages['begindate']!='':
             begindate=kwages['begindate']
@@ -56,11 +51,7 @@ class opMysqlObj(db.opMysqlObj):
     def setWarnTaskStatus(self,**kwages):
         sql="update pps_warntask set status=%s where status=%s and id=%s"%(kwages['tostatus'],kwages['fromstatus'],kwages['id'])
         self.putData(**{'sql':sql})
-    def createMess(self,**kwages):
-        sql="insert into  pps_message (createtime,activityname,path,userid,status)values(now(),'%s','%s',%s,1)"%(kwages['activityname'],kwages['path'],kwages['userid'])
-        #print(sql)
-        self.putData(**{'sql':sql})
-        
+
     def setWarnTaskMessId(self,**kwages):
         sql="update pps_warntask set messid=%s where id=%s"%(kwages['lastid'],kwages['id'])
         self.putData(**{'sql':sql})
@@ -81,7 +72,7 @@ class opMysqlObj(db.opMysqlObj):
         self.putData(**{'sql':sql})
         
     def getWarnTask(self,**kwages):
-        sql="select id,warnid,warntype,enviname,warndesc,warnlevel,date_format(createtime, '%Y-%m-%d %H:%i:%s') createtime,date_format(recoverytime, '%Y-%m-%d %H:%i:%s') recoverytime,reason,measure,date_format(writetime, '%Y-%m-%d %H:%i:%s') writetime,status,messid,userid from pps_warntask where id='"+kwages['id']+"'"
+        sql="SELECT a.id,warnid,warntype,enviname,warndesc,b.levelname warnlevel,DATE_FORMAT(createtime, '%Y-%m-%d %H:%i:%s') createtime,DATE_FORMAT(recoverytime, '%Y-%m-%d %H:%i:%s') recoverytime,reason,measure,DATE_FORMAT(writetime, '%Y-%m-%d %H:%i:%s') writetime,STATUS,messid,userid FROM pps_warntask a LEFT JOIN  pps_warnlevel b ON a.`warnlevel`=b.level WHERE a.id='"+kwages['id']+"'"
         temp=self.getData(**{'sql':sql})
         if len(temp)>0:
             return(temp[0])
@@ -89,6 +80,11 @@ class opMysqlObj(db.opMysqlObj):
             return({})
     
     def getUndoMess(self,**kwages):
-        sql="select activityname,date_format(createtime, '%Y-%m-%d %H:%i:%s') createtime,path from pps_message where status=1 order by createtime desc"
+        sql="select activityname,date_format(createtime, '%Y-%m-%d %H:%i:%s') createtime,path from pps_message where status=1 and userid="+str(kwages['userid'])+"  order by createtime desc"
+        print(sql)
         return(self.getData(**{'sql':sql}))
+        
+    def getWarnLevelName(self,**kwages):
+        sql="select levelname from pps_warnlevel where level=%s"%(kwages['level'])
+        return(self.getData(**{'sql':sql})['levelname'])
         

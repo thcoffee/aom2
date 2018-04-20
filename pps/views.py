@@ -2,7 +2,10 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required 
+from django.contrib.auth import authenticate
+from django.contrib.auth import login
 from django.core.paginator import Paginator
+from django.contrib import auth
 import traceback
 import json
 import time
@@ -12,59 +15,51 @@ from . import ppsdb
 #页面访问权限验证妆饰器
 def _auth_page(view): 
     
-    def _checkauth(**kwargs):
-        dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
-        print(dbcon.isExistsUser(**{'username':kwargs['username']}))
-        if dbcon.isExistsUser(**{'username':kwargs['username']})>0:
-            return(True)
-        else:
-            return(False)
-    
-        
     def aauth(request, *args, **kwargs): 
-        print(request.read())
-        request.user.username=request.GET.get('username')
+        user = authenticate(username=request.GET.get('empNo',''), password='tcxt'+request.GET.get('empNo',''))
+        if user is not None:
+            login(request, user)
+        #print('zj',request.GET.get('empNo'),'tcxt'+request.GET.get('empNo'),user)
         return view(request, *args, **kwargs)
-        
-    @login_required(login_url="/admin/login/")      
-    def mauth(request, *args, **kwargs):    
-        return view(request, *args, **kwargs)
-    
-    def main(request, *args, **kwargs)  :  
-        if _checkauth(**{'username':request.GET.get('username')}):    
-            print('auto')    
-            return aauth(request, *args, **kwargs)  
+
+    def main(request, *args, **kwargs)  : 
+        #print('sfdl',request.user.is_authenticated)  
+        if request.user.is_authenticated: 
+            return view(request, *args, **kwargs)          
         else:
-            return mauth(request, *args, **kwargs)  
+            return aauth(request, *args, **kwargs)   
     return main
 
 
 
 #首页 
 
-@_auth_page
+@_auth_page 
 def index(request):
+    print(request.GET.get('empNo'))
+    #return HttpResponse('''heelo''')
     return HttpResponse('''<meta http-equiv="refresh" content="0;url=/pps/undo/">''')
 
 #待处理消息
-@_auth_page  
-#@login_required(login_url="/admin/login/")
+#@_auth_page  
+@login_required(login_url="/admin/login/")   
 def undo(request):
+    print('zheli   ',authenticate(username='117847', password='pbkdf2_sha256$100000$3sW3vGou97Xp$piYDBS5g9dLivhvm5Rk1kC+baOhvOPER1/sSFyIAf/0='))
     return render(request, 'undo.html',{})
 
 #处理预警消息
-@login_required(login_url="/admin/login/")     
+@login_required(login_url="/admin/login/")   
 def dowarn(request):
     return render(request, 'dowarn.html',{})
 
 #查看预警列表信息
-@login_required(login_url="/admin/login/")
+@login_required(login_url="/admin/login/")  
 def querywarn(request):
     return render(request, 'querywarn.html',{})
 
 
 #查看预警信息
-@login_required(login_url="/admin/login/")
+@login_required(login_url="/admin/login/")  
 def querywarninfo(request):
     return render(request, 'querywarninfo.html',{})
 
@@ -73,20 +68,21 @@ def querywarninfo(request):
 def review(request):
     return render(request, 'review.html',{})
 
-#审核
-@login_required(login_url="/admin/login/")
+#统计
+@login_required(login_url="/admin/login/")  
 def tjwarn(request):
     return render(request, 'tjwarn.html',{})
- 
-@login_required(login_url="/admin/login/")      
-@csrf_exempt	
+
+@csrf_exempt
+@login_required(login_url="/admin/login/")     	
 def getdata(request):
     return HttpResponse(json.dumps({"name":"liuyanli"}), content_type='application/json')	
 	
-@login_required(login_url="/admin/login/") 	
-@csrf_exempt		
+#@login_required(login_url="/admin/login/") 
+@csrf_exempt
+@login_required(login_url="/admin/login/")  		
 def putdata(request):
-    #print(request.POST.get('task'))
+    print(request.POST.get('task'))
     if request.POST.get('task')=='test':
         return HttpResponse(json.dumps({"name":"liuyanli"}), content_type='application/json')	
     elif request.POST.get('task')=='getundo':	
@@ -194,7 +190,7 @@ def _getWarnJson(request):
 
 def _getUndoJson(request):	
     dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})	
-    undoList=dbcon.getUndoMess(**{})
+    undoList=dbcon.getUndoMess(**{'userid':dbcon.usernameToUserid(**{'username':request.user.username})})
     p=_my_pagination(request,undoList,request.POST.get('display_num',5))
     return_json={'list':p['list'],'undo_num':len(undoList),'num_pages':p['num_pages']}	
     print(return_json)
