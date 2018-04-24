@@ -111,7 +111,6 @@ def test(request):
 def _getTjwarn(request):
     dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
     return_json=dbcon.getStatistics(**{'begindate':request.POST.get('begindate'),'enddate':request.POST.get('enddate')})
-    print(return_json)
     return(return_json)  
     
 def _getQueryWarn(request):
@@ -128,15 +127,15 @@ def _getQueryWarn(request):
 def _putAudJson(request):
     try:
         dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
-        warnTaskCount=dbcon.getWarnTaskCountForUpdate(**{'id':request.POST.get('id',0),'status':2})
-        if warnTaskCount!=0:
+        warnTaskCount=dbcon.getWarnTaskForUpdate(**{'id':request.POST.get('id',0),'status':2})
+        if len(warnTaskCount)!=0:
             dbcon.setMessStatus(**{'fromstatus':1,'tostatus':2,'messid':request.POST.get('messid')})
-            dbcon.createWarnTaskMess(**{'warntaskMsg':request.POST.get('warntaskMsg'),'id':request.POST.get('id',0),'status':request.POST.get('status')})
+            dbcon.createWarnTaskMess(**{'warntaskMsg':request.POST.get('warntaskMsg'),'id':request.POST.get('id',0),'status':request.POST.get('status'),'userid':dbcon.usernameToUserid(**{'username':request.user.username})})
             if request.POST.get('status')=='1':
                 dbcon.setWarnTaskStatus(**{'fromstatus':2,'tostatus':3,'id':request.POST.get('id',0)})
             else:
                 dbcon.setWarnTaskStatus(**{'fromstatus':2,'tostatus':1,'id':request.POST.get('id',0)})
-                dbcon.createMess(**{'activityname':'重新处理','path':'/pps/dowarn/?id='+request.POST.get('id'),'userid':1})
+                dbcon.createMess(**{'activityname':'重新处理','path':'/pps/dowarn/?id='+request.POST.get('id'),'userid':dbcon.getWarnTaskUserid(**{'id':request.POST.get('id',0)})})
                 dbcon.setWarnTaskMessId(**{'lastid':dbcon.getLaseID()['lastid'],'id':request.POST.get('id',0)})
             dbcon.commit()
             warntaskMsg=dbcon.getWarnTaskMessS(**{'id':request.POST.get('id',0)})
@@ -159,12 +158,16 @@ def _putAudJson(request):
 def _putWarnJson(request):
     try:
         dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
-        warnTaskCount=dbcon.getWarnTaskCountForUpdate(**{'id':request.POST.get('id'),'status':1})
-        if warnTaskCount!=0:
-            dbcon.setWarnTaskInfo(**{'reason':request.POST.get('reason'),'measure':request.POST.get('measure'),'id':request.POST.get('id')})
-            dbcon.setMessStatus(**{'fromstatus':1,'tostatus':2,'messid':request.POST.get('messid')})
-            dbcon.createMess(**{'activityname':'待审核','path':'/pps/review/?id='+request.POST.get('id'),'userid':1})
-            dbcon.setWarnTaskMessId(**{'lastid':dbcon.getLaseID()['lastid'],'id':request.POST.get('id')})
+        print('162',request.POST.get('id'))
+        warnTaskCount=dbcon.getWarnTaskForUpdate(**{'id':request.POST.get('id'),'status':1})
+        if len(warnTaskCount)!=0:
+            if warnTaskCount[0]['warnlevel']<3:
+                dbcon.setWarnTaskInfo(**{'reason':request.POST.get('reason'),'measure':request.POST.get('measure'),'id':request.POST.get('id'),'status':2})
+                dbcon.createMess(**{'activityname':'待审核','path':'/pps/review/?id='+request.POST.get('id'),'userid':warnTaskCount[0]['auduserid']})
+                dbcon.setWarnTaskMessId(**{'lastid':dbcon.getLaseID()['lastid'],'id':request.POST.get('id')})
+            else:
+                dbcon.setWarnTaskInfo(**{'reason':request.POST.get('reason'),'measure':request.POST.get('measure'),'id':request.POST.get('id'),'status':3})
+            dbcon.setMessStatus(**{'fromstatus':1,'tostatus':2,'messid':request.POST.get('messid')})                
         dbcon.commit()
         dbcon.close()
         return_json={'status':'true'}
@@ -177,10 +180,13 @@ def _putWarnJson(request):
 #获取处理预警信息表单信息
 def _getWarnJson(request):
     dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
-    return_json=dbcon.getWarnTask(**{'id':request.POST.get('id')})
+   
     if request.POST.get('task')=='getwarn' or request.POST.get('task')=='getquerywarninfo':
+        return_json=dbcon.getWarnTask(**{'id':request.POST.get('id'),'userid':dbcon.usernameToUserid(**{'username':request.user.username})})
         return_json['warntaskMsg']=dbcon.getWarnTaskMess(**{'id':request.POST.get('id')})
     elif request.POST.get('task')=='getaut':
+        userid=dbcon.getWarnTaskUserid(**{'id':request.POST.get('id')})
+        return_json=dbcon.getWarnTask(**{'id':request.POST.get('id'),'userid':userid})
         return_json['warntaskMsg']=dbcon.getWarnTaskMessS(**{'id':request.POST.get('id')})
     print(return_json)    
     return(return_json)

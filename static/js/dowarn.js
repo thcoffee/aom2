@@ -68,7 +68,7 @@ function submit(){
 }
 function callback(result){
 	if(result.status){
-		window.location.href="http://10.68.3.99:8080/pps/undo/";
+		window.location.href="/pps/undo/";
 	}		
 }
 
