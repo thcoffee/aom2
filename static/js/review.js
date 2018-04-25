@@ -19,6 +19,7 @@ $(document).ready(
 ))
 
 function callbackreview(result){
+	alert(result.warnid);
 	$("#warnid").text(result.warnid);
 	$("#warntype").text(result.warntype);
 	$("#enviname").text(result.enviname);
