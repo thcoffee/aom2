@@ -60,18 +60,14 @@
 					<td class="lablebg">审核意见：</td>
 					<td colspan="3" id="warntaskMsg" style="word-wrap:break-word;word-break:break-all;"></td>
 				</tr>
-				<tr>
-					<td colspan="4">
-						<ul class="pager" style="margin-top:7px;height:10px;">
-							<li style="height:20px;"><a href="#" style="background-color:#337AB7;width:100px;color:#FFF;" onmouseover="this.style.cssText='color:#00F;background-color:#337AB7;width:100px;font-weight:bold;'" onmouseout="this.style.cssText='color:#FFF;background-color:#337AB7;width:100px;'" onclick="submit()">提交</a></li>
-						</ul>
-					</td>
-				</tr>
 			</tbody>
 		</table>
 		<input type="hidden" id="messid" value="">
 		<input type="hidden" id="getid" value="">
 	</form>
+</div>
+<div style="text-align:center;">
+	<button id="sub" type="button" class="btn btn-primary" onclick="submit()" style="width:90px;">提    交</button></li>
 </div>
 {% endblock %}
 </body>

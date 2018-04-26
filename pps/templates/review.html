@@ -58,21 +58,17 @@
 						<textarea id="warntaskMsg" class="form-control padtop" rows="2"></textarea>
 					</td>
 				</tr>
-				<tr>
-					<td colspan="4" id="but">
-						<ul id="but11" class="pager" style="margin-top:7px;height:10px;">
-							<li style="height:20px;"><a id="agree"   href="agree();" style="background-color:#337AB7;width:100px;color:#FFF;" onmouseover="this.style.cssText='color:#00F;background-color:#337AB7;width:100px;font-weight:bold;'" onmouseout="this.style.cssText='color:#FFF;background-color:#337AB7;width:100px;'" onclick="agree()">同意</a></li>
-							<li style="height:20px;"><a id="unagree" href="unagree()" style="background-color:#337AB7;width:100px;color:#FFF;" onmouseover="this.style.cssText='color:#00F;background-color:#337AB7;width:100px;font-weight:bold;'" onmouseout="this.style.cssText='color:#FFF;background-color:#337AB7;width:100px;'" onclick="unagree()">不同意</a></li>
-						</ul>
-					</td>
-				</tr>
 			</tbody>
 		</table>
 		<input type="hidden" id="messid" value="">
 		<input type="hidden" id="getid" value="">
 	</form>
 	</div>
+<div style="text-align:center;">
+	<button id="agree" type="button" class="btn btn-primary" onclick="agree()" style="width:90px;">同意</button>&nbsp;&nbsp;
+	<button id="unagree" type="button" class="btn btn-primary" onclick="unagree()" style="width:90px;">不同意</button>
 </div>
+</div></br>
 <div class="panel panel-default panel-primary">
 	<div class="panel-heading" style="float:left;width:100%;top:0px;"><span class="glyphicon glyphicon-ok" style="font-weight:bold;">&nbsp;</span>审核意见列表</div>
 		<table id="reviewList" class="table table-striped" style="font-size:12px;">

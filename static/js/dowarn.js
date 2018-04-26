@@ -68,6 +68,7 @@ function submit(){
 }
 function callback(result){
 	if(result.status){
+		$('#sub').attr("disabled",true); 
 		window.location.href="/pps/undo/";
 	}		
 }

@@ -1,4 +1,3 @@
-$("#but11").innerHtml="<input type='button' value='添加'>";
 var url = location.search;
 var getid = ""
 if (url.indexOf("?") != -1) {  
@@ -19,7 +18,6 @@ $(document).ready(
 ))
 
 function callbackreview(result){
-	alert(result.warnid);
 	$("#warnid").text(result.warnid);
 	$("#warntype").text(result.warntype);
 	$("#enviname").text(result.enviname);
@@ -108,5 +106,7 @@ function callback(result){
 		+ data[i].createtime
 		+ "</td></tr>");
 	}
+	$('#agree').attr("disabled",true); 
+	$('#unagree').attr("disabled",true); 
 }
 
