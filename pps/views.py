@@ -10,6 +10,9 @@ import traceback
 import json
 import time
 from . import ppsdb
+import sys
+import logging
+logger = logging.getLogger("django")
 # Create your views here.
 
 #页面访问权限验证妆饰器
@@ -21,7 +24,6 @@ def _auth_page(view):
         user = authenticate(username=request.GET.get('empNo',''), password='tcxt'+request.GET.get('empNo',''))
         if user is not None:
             login(request, user)
-        #print('zj',request.GET.get('empNo'),'tcxt'+request.GET.get('empNo'),user)
         return view(request, *args, **kwargs)
 
     #主方法
@@ -42,14 +44,13 @@ def _auth_page(view):
 
 @_auth_page 
 def index(request):
-    print(request.GET.get('empNo'))
-    #return HttpResponse('''heelo''')
     return HttpResponse('''<meta http-equiv="refresh" content="0;url=/pps/undo/">''')
 
 #待处理消息
 #@_auth_page  
 @login_required(login_url="/admin/login/")   
 def undo(request):
+    logger.info('undo')
     return render(request, 'undo.html',{})
 
 #处理预警消息
@@ -202,7 +203,7 @@ def _putWarnJson(request):
         dbcon.close()
         return_json={'status':'true'}
     except Exception as info: 
-        print(traceback.format_exc())
+        logger.error(traceback.format_exc())
         return_json={'status':'false'}
     return(return_json)
 
@@ -211,15 +212,18 @@ def _putWarnJson(request):
 def _getWarnJson(request):
     dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
     #如果是处理警告信息页面 或者是查询预警信息详细页面 
-    if request.POST.get('task')=='getwarn' or request.POST.get('task')=='getquerywarninfo':
+    if request.POST.get('task')=='getwarn' :
         return_json=dbcon.getWarnTask(**{'id':request.POST.get('id'),'userid':dbcon.usernameToUserid(**{'username':request.user.username})})
         return_json['warntaskMsg']=dbcon.getWarnTaskMess(**{'id':request.POST.get('id')})
     #如果是审核信息页面
+    elif request.POST.get('task')=='getquerywarninfo':
+        userid=dbcon.getWarnTaskUserid(**{'id':request.POST.get('id')})
+        return_json=dbcon.getWarnTask(**{'id':request.POST.get('id'),'userid':userid})
+        return_json['warntaskMsg']=dbcon.getWarnTaskMess(**{'id':request.POST.get('id')})
     elif request.POST.get('task')=='getaut':
         userid=dbcon.getWarnTaskUserid(**{'id':request.POST.get('id')})
         return_json=dbcon.getWarnTask(**{'id':request.POST.get('id'),'userid':userid})
-        return_json['warntaskMsg']=dbcon.getWarnTaskMessS(**{'id':request.POST.get('id')})
-    print(return_json)    
+        return_json['warntaskMsg']=dbcon.getWarnTaskMessS(**{'id':request.POST.get('id')})    
     return(return_json)
 
 
@@ -232,7 +236,6 @@ def _getUndoJson(request):
     #分页处理
     p=custom._my_pagination(request,undoList,request.POST.get('display_num',5))
     return_json={'list':p['list'],'undo_num':len(undoList),'num_pages':p['num_pages']}	
-    print(return_json)
     return(return_json)
 	
 

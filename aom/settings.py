@@ -121,9 +121,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
-STATIC_URL = '/static/'
+
 PROJECT_PATH=os.path.abspath(os.path.dirname(__file__))
 STATIC_ROOT=os.path.join(os.path.dirname(PROJECT_PATH),'static')
+STATIC_URL = '/static/'
 STATICFILES_DIRS=(
 ('css',os.path.join(STATIC_ROOT,'css')),
 ('fonts',os.path.join(STATIC_ROOT,'fonts')),
@@ -134,3 +135,43 @@ STATICFILES_DIRS=(
 ('bootstrap',os.path.join(STATIC_ROOT,'bootstrap')),
 ('html',os.path.join(STATIC_ROOT,'html')),
 )
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        }, # 针对 DEBUG = True 的情况
+    },
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s - %(levelname)s - %(filename)s[%(lineno)d] - %(message)s'
+        },
+    },
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+             'formatter':'standard'
+        },
+        'console':{
+            'level': 'INFO',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard'
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers' :['console','mail_admins'],
+            'level':'DEBUG',
+            'propagate': True # 是否继承父类的log信息
+        }, # handlers 来自于上面的 handlers 定义的内容
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    }
+}

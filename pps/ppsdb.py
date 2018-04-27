@@ -26,7 +26,6 @@ class opMysqlObj(db.opMysqlObj):
         sql1="SELECT warntype,COUNT(*) count FROM pps_warntask where createtime <='%s' and  createtime >='%s' GROUP BY warntype"%(enddate,begindate)
         sql2="SELECT enviname,COUNT(*) count FROM pps_warntask where createtime <='%s' and  createtime >='%s' GROUP BY enviname"%(enddate,begindate)
         sql3="select levelname warnlevel,count FROM (SELECT warnlevel,COUNT(*) count FROM pps_warntask where createtime <='%s' and  createtime >='%s' GROUP BY warnlevel ) a LEFT JOIN pps_warnlevel b ON a.warnlevel=b.level" %(enddate,begindate) 
-        print(kwages,sql1,sql2,sql3)
         return_json={}        
         return_json['warntype']=self.getData(**{'sql':sql1})
         return_json['enviname']=self.getData(**{'sql':sql2})
@@ -35,7 +34,6 @@ class opMysqlObj(db.opMysqlObj):
      
     #获取历史预警信息     
     def getQueryWarn(self,**kwages):
-       #print(str(kwages['id']))
         sql="SELECT CONCAT(substring(warndesc,1,30),'......') warndesc,date_format(createtime,'%Y-%m-%d %H:%i:%s') createtime,case when status=1 then '待处理' when status=2 then '待审核'  when status=3 then '已完成' end status,CONCAT('/pps/querywarninfo/?id=',id) url FROM pps_warntask order by createtime desc"
         return(self.getData(**{'sql':sql}))
     '''
