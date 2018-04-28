@@ -20,11 +20,11 @@ function callbackundo(result){
 	$("#undoList tbody").empty();
 	for(var i=0;i<data.length;i++){
 		$("#undoList tbody")
-		.append("<tr><td width='65%'><span class='glyphicon glyphicon-fire'>&nbsp;</span><a href='"
+		.append("<tr><td width='60%'><span class='glyphicon glyphicon-fire'>&nbsp;</span><a href='"
 		+ data[i].path
 		+ "'>"
 		+ data[i].activityname
-		+ "</a></td><td width='35%'>"
+		+ "</a></td><td width='40%'>"
 		+ data[i].createtime
 		+ "</td></tr>");
 	}

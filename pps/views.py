@@ -7,12 +7,14 @@ from django.contrib.auth import login
 from django.contrib import auth
 from aom import custom
 import traceback
+import simplejson
 import json
 import time
 from . import ppsdb
 import sys
 import logging
 logger = logging.getLogger("django")
+#logger = logging.getLogger(__name__)
 # Create your views here.
 
 #页面访问权限验证妆饰器
@@ -50,7 +52,6 @@ def index(request):
 #@_auth_page  
 @login_required(login_url="/admin/login/")   
 def undo(request):
-    logger.info('undo')
     return render(request, 'undo.html',{})
 
 #处理预警消息
@@ -89,37 +90,49 @@ def getdata(request):
 @csrf_exempt
 @login_required(login_url="/admin/login/")  		
 def putdata(request):
-    if request.POST.get('task')=='test':
-        return HttpResponse(json.dumps({"name":"liuyanli"}), content_type='application/json')	
-    #获取待处理消息    
-    elif request.POST.get('task')=='getundo':	
-        return HttpResponse(json.dumps(_getUndoJson(request)), content_type='application/json')	
-    #获取预警信息    
-    elif request.POST.get('task')=='getwarn':
-        return HttpResponse(json.dumps(_getWarnJson(request)), content_type='application/json')
-    #获取审计信息    
-    elif request.POST.get('task')=='getaut':
-        return HttpResponse(json.dumps(_getWarnJson(request)), content_type='application/json')
-    #提交预警信息处理    
-    elif request.POST.get('task')=='putwarn':
-        return HttpResponse(json.dumps(_putWarnJson(request)), content_type='application/json') 
-    #提交审核信息    
-    elif request.POST.get('task')=='putaud':
-        return HttpResponse(json.dumps(_putAudJson(request)), content_type='application/json') 
-    #提交请求获取预警信息查询    
-    elif request.POST.get('task')=='putquerywarn':
-        return HttpResponse(json.dumps(_getQueryWarn(request)), content_type='application/json') 
-    #获取预警信息查询详细内容    
-    elif request.POST.get('task')=='getquerywarninfo':
-        return HttpResponse(json.dumps(_getWarnJson(request)), content_type='application/json') 
-    #获取统计信息    
-    elif request.POST.get('task')=='gettjwarn':
-        return HttpResponse(json.dumps(_getTjwarn(request)), content_type='application/json')     
-    else:
-        return HttpResponse(json.dumps({"name":"liuyanli"}), content_type='application/json')
-		
+    try:
+        if request.POST.get('task')=='test':
+            return HttpResponse(json.dumps({"name":"liuyanli"}), content_type='application/json')	
+        #获取待处理消息    
+        elif request.POST.get('task')=='getundo':	
+            return HttpResponse(json.dumps(_getUndoJson(request)), content_type='application/json')	
+        #获取预警信息    
+        elif request.POST.get('task')=='getwarn':
+            return HttpResponse(json.dumps(_getWarnJson(request)), content_type='application/json')
+        #获取审计信息    
+        elif request.POST.get('task')=='getaut':
+            return HttpResponse(json.dumps(_getWarnJson(request)), content_type='application/json')
+        #提交预警信息处理    
+        elif request.POST.get('task')=='putwarn':
+            return HttpResponse(json.dumps(_putWarnJson(request)), content_type='application/json') 
+        #提交审核信息    
+        elif request.POST.get('task')=='putaud':
+            return HttpResponse(json.dumps(_putAudJson(request)), content_type='application/json') 
+        #提交请求获取预警信息查询    
+        elif request.POST.get('task')=='putquerywarn':
+            return HttpResponse(json.dumps(_getQueryWarn(request)), content_type='application/json') 
+        #获取预警信息查询详细内容    
+        elif request.POST.get('task')=='getquerywarninfo':
+            return HttpResponse(json.dumps(_getWarnJson(request)), content_type='application/json') 
+        #获取统计信息    
+        elif request.POST.get('task')=='gettjwarn':
+            return HttpResponse(json.dumps(_getTjwarn(request)), content_type='application/json')     
+        else:
+            return HttpResponse(json.dumps({"name":"liuyanli"}), content_type='application/json')
+    except Exception as info:
+        logger.error(traceback.format_exc())
+@csrf_exempt		
 def test(request):
-    return render(request, 'test.html',{'id':'hell'})
+    print(a)
+    try:
+        print(simplejson.loads(request.body))
+        #print(a)
+        return_json={'a':'b'}
+        return HttpResponse(json.dumps({"name":"liuyanli"}),content_type='application/json')
+    except Exception as info: 
+        print(traceback.format_exc())
+        return HttpResponse(json.dumps({"msg":"error","content":str(traceback.format_exc())}),content_type='application/json')
+    #return render(request, 'test.html',{'id':'hell'})
 
 #获取统计信息
 def _getTjwarn(request):
@@ -149,7 +162,7 @@ def _putAudJson(request):
             #将消息状态变更为已处理
             dbcon.setMessStatus(**{'fromstatus':1,'tostatus':2,'messid':request.POST.get('messid')})
             #创建一条审核意见
-            dbcon.createWarnTaskMess(**{'warntaskMsg':request.POST.get('warntaskMsg'),'id':request.POST.get('id',0),'status':request.POST.get('status'),'userid':dbcon.usernameToUserid(**{'username':request.user.username})})
+            dbcon.createWarnTaskAudMess(**{'warntaskMsg':request.POST.get('warntaskMsg'),'id':request.POST.get('id',0),'status':request.POST.get('status'),'userid':dbcon.usernameToUserid(**{'username':request.user.username})})
             #如果同意
             if request.POST.get('status')=='1':
                 #将预警信息标注为以处理完毕
@@ -160,7 +173,7 @@ def _putAudJson(request):
                 #给处理人重新发消息
                 dbcon.createMess(**{'activityname':'重新处理','path':'/pps/dowarn/?id='+request.POST.get('id'),'userid':dbcon.getWarnTaskUserid(**{'id':request.POST.get('id',0)})})
                 #更新预警信息对应的消息id
-                dbcon.setWarnTaskMessId(**{'lastid':dbcon.getLaseID()['lastid'],'id':request.POST.get('id',0)})
+                dbcon.setWarnTaskMessId(**{'lastid':dbcon.getLaseID(),'id':request.POST.get('id',0)})
             dbcon.commit()
             #获取预警信息对应的审核意见
             warntaskMsg=dbcon.getWarnTaskMessS(**{'id':request.POST.get('id',0)})
@@ -171,7 +184,7 @@ def _putAudJson(request):
             dbcon.close()
             return_json={'status':'false','warntaskMsg':[]}
             
-    except Exception as info: 
+    except Exception as info:
         print(traceback.format_exc())
         return_json={'status':'false','warntaskMsg':[]}
     return(return_json)    
@@ -193,7 +206,7 @@ def _putWarnJson(request):
                 #发出待审核消息
                 dbcon.createMess(**{'activityname':'待审核','path':'/pps/review/?id='+request.POST.get('id'),'userid':warnTaskCount[0]['auduserid']})
                 #将将待审核消息id写入预警信息中。
-                dbcon.setWarnTaskMessId(**{'lastid':dbcon.getLaseID()['lastid'],'id':request.POST.get('id')})
+                dbcon.setWarnTaskMessId(**{'lastid':dbcon.getLaseID(),'id':request.POST.get('id')})
             else:
                 #否则直接将预警信息变更问以处理完毕。
                 dbcon.setWarnTaskInfo(**{'reason':request.POST.get('reason'),'measure':request.POST.get('measure'),'id':request.POST.get('id'),'status':3})
@@ -214,16 +227,16 @@ def _getWarnJson(request):
     #如果是处理警告信息页面 或者是查询预警信息详细页面 
     if request.POST.get('task')=='getwarn' :
         return_json=dbcon.getWarnTask(**{'id':request.POST.get('id'),'userid':dbcon.usernameToUserid(**{'username':request.user.username})})
-        return_json['warntaskMsg']=dbcon.getWarnTaskMess(**{'id':request.POST.get('id')})
+        return_json['warntaskMsg']=dbcon.getWarnTaskAudMess(**{'id':request.POST.get('id')})
     #如果是审核信息页面
     elif request.POST.get('task')=='getquerywarninfo':
         userid=dbcon.getWarnTaskUserid(**{'id':request.POST.get('id')})
         return_json=dbcon.getWarnTask(**{'id':request.POST.get('id'),'userid':userid})
-        return_json['warntaskMsg']=dbcon.getWarnTaskMess(**{'id':request.POST.get('id')})
+        return_json['warntaskMsg']=dbcon.getWarnTaskAudMess(**{'id':request.POST.get('id')})
     elif request.POST.get('task')=='getaut':
         userid=dbcon.getWarnTaskUserid(**{'id':request.POST.get('id')})
         return_json=dbcon.getWarnTask(**{'id':request.POST.get('id'),'userid':userid})
-        return_json['warntaskMsg']=dbcon.getWarnTaskMessS(**{'id':request.POST.get('id')})    
+        return_json['warntaskMsg']=dbcon.getWarnTaskAudMessS(**{'id':request.POST.get('id')})    
     return(return_json)
 
 

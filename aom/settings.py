@@ -164,9 +164,9 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers' :['console','mail_admins'],
+            'handlers' :['console'],
             'level':'DEBUG',
-            'propagate': True # 是否继承父类的log信息
+            'propagate': False # 是否继承父类的log信息
         }, # handlers 来自于上面的 handlers 定义的内容
         'django.request': {
             'handlers': ['mail_admins'],

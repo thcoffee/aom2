@@ -70,3 +70,17 @@ class PpsWarnlevel(models.Model):
 
     def __str__(self):
         return("/".join([str(self.level),str(self.levelname)]))         
+        
+        
+class PpsEnvitype(models.Model):
+    envitype = models.CharField(max_length=50, blank=True, null=True,verbose_name='环境类型')
+    enviname = models.CharField(max_length=50, blank=True, null=True,verbose_name='环境名字')
+
+    class Meta:
+        managed = False
+        db_table = 'pps_envitype'
+        verbose_name_plural='环境设置'  
+        verbose_name='环境设置' 
+        
+    def __str__(self):
+        return("/".join([str(self.envitype),str(self.enviname)]))   

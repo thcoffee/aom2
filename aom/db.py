@@ -34,7 +34,7 @@ class opMysqlObj(object):
         self.putData(**{'sql':sql})
         
     def getLaseID(self):
-        return(self.getData(**{'sql':'SELECT LAST_INSERT_ID() lastid'})[0])
+        return(self.getData(**{'sql':'SELECT LAST_INSERT_ID() lastid'})[0]['lastid'])
     
     def getData(self,**kwages):     
         cur=self.db.cursor()
