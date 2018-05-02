@@ -24,7 +24,7 @@ class opMysqlObj(db.opMysqlObj):
             enddate=time.strftime('%Y-%m-%d', time.localtime(time.time()) ) 
                       
         sql1="SELECT b.warnname warntype,count FROM(SELECT warntype,COUNT(*) count FROM pps_warntask where createtime <='%s' and  createtime >='%s' GROUP BY warntype ) a LEFT JOIN pps_warntype b ON a.warntype=b.warntype"%(enddate,begindate)
-        sql2="SELECT enviname,COUNT(*) count FROM pps_warntask where createtime <='%s' and  createtime >='%s' GROUP BY enviname"%(enddate,begindate)
+        sql2="SELECT b.enviname,a.count FROM (SELECT enviname,COUNT(*) count FROM pps_warntask where createtime <='%s' and  createtime >='%s' GROUP BY enviname) a  LEFT JOIN pps_envitype b ON a.enviname=b.envitype"%(enddate,begindate)
         sql3="select levelname warnlevel,count FROM (SELECT warnlevel,COUNT(*) count FROM pps_warntask where createtime <='%s' and  createtime >='%s' GROUP BY warnlevel ) a LEFT JOIN pps_warnlevel b ON a.warnlevel=b.level" %(enddate,begindate) 
         return_json={}        
         return_json['warntype']=self.getData(**{'sql':sql1})
@@ -34,7 +34,7 @@ class opMysqlObj(db.opMysqlObj):
      
     #获取历史预警信息     
     def getQueryWarn(self,**kwages):
-        sql="SELECT CONCAT(substring(warndesc,1,30),'......') warndesc,date_format(createtime,'%Y-%m-%d %H:%i:%s') createtime,case when status=1 then '待处理' when status=2 then '待审核'  when status=3 then '已完成' end status,CONCAT('/pps/querywarninfo/?id=',id) url FROM pps_warntask order by createtime desc"
+        sql="SELECT CONCAT(substring(warndesc,1,30),'......') warndesc,date_format(createtime,'%Y-%m-%d %H:%i:%s') createtime,case when status=1 then '待处理' when status=2 then '待审核'  when status=3 then '已完成' end status,CONCAT('/pps/querywarninfo/?id=',id) url FROM pps_warntask order by createtime desc LIMIT 0,1000"
         return(self.getData(**{'sql':sql}))
     '''
     排它获取是否存在该预警信息,引入**kwages
@@ -54,7 +54,7 @@ class opMysqlObj(db.opMysqlObj):
         sql="update pps_message set status=%s,completetime=now() where status=%s and id=%s"%(kwages['tostatus'],kwages['fromstatus'],kwages['messid'])
         self.putData(**{'sql':sql})
     '''
-    #新建预警信息审核消息,引入**kwages 
+    新建预警信息审核消息,引入**kwages 
     warntaskMsg  审核意见
     id  warntask的主键id
     userid  用户id
@@ -65,7 +65,7 @@ class opMysqlObj(db.opMysqlObj):
         self.putData(**{'sql':sql})
     
     '''
-    #设置预警信息状态,引入**kwages 
+    设置预警信息状态,引入**kwages 
     fromstatus 从什么状态 (1待处理 2待审核 3处理完毕)
     tostatus  变更为什么状态
     id  预警信息主键id
@@ -74,7 +74,7 @@ class opMysqlObj(db.opMysqlObj):
         sql="update pps_warntask set status=%s where status=%s and id=%s"%(kwages['tostatus'],kwages['fromstatus'],kwages['id'])
         self.putData(**{'sql':sql})
     '''
-    #对预警任务设置消息id,引入**kwages 
+    对预警任务设置消息id,引入**kwages 
     lastid 消息id
     id  taskwarn的主键id
     '''
@@ -82,7 +82,7 @@ class opMysqlObj(db.opMysqlObj):
         sql="update pps_warntask set messid=%s where id=%s"%(kwages['lastid'],kwages['id'])
         self.putData(**{'sql':sql})
     '''
-    #获取所有审核消息 ,引入**kwages 
+    获取所有审核消息 ,引入**kwages 
     id  taskwarn的主键id   
     '''    
     def getWarnTaskAudMessS(self,**kwages):
@@ -91,7 +91,7 @@ class opMysqlObj(db.opMysqlObj):
         return(self.getData(**{'sql':sql}))
     
     '''
-    #获取审核消息最新的一条 ,引入**kwages 
+    获取审核消息最新的一条 ,引入**kwages 
     id  taskwarn的主键id  
     '''
     def getWarnTaskAudMess(self,**kwages):
@@ -102,7 +102,7 @@ class opMysqlObj(db.opMysqlObj):
         return(temp)    
     
     '''
-    #设置预警信息，将原因和预防措施录入    ,引入**kwages 
+    设置预警信息，将原因和预防措施录入    ,引入**kwages 
     reason 原因
     measure  预防措施
     status  状态 (1待处理 2待审核 3处理完毕)
@@ -112,7 +112,7 @@ class opMysqlObj(db.opMysqlObj):
         sql="update pps_warntask set reason='%s',measure='%s',writetime=now(),status=%s where status=1 and id=%s"%(pymysql.escape_string(kwages['reason']),pymysql.escape_string(kwages['measure']),kwages['status'],kwages['id'])
         self.putData(**{'sql':sql})
     '''    
-    #获取预警信息详情  ,引入**kwages 
+    获取预警信息详情  ,引入**kwages 
     userid  用户id
     id  taskwarn的主键id  
     '''
@@ -186,10 +186,12 @@ class opMysqlObj(db.opMysqlObj):
         self.createMess(**{'activityname':self.getWarnTypeName(**kwages)+'预警','path':'/pps/dowarn/?id='+kwages['wid'],'userid':kwages['userid']})
         pass   
     
+    #设置恢复时间
     def setWarnRecoveryTime(self,**kwages):
         sql="update pps_warntask set recoverytime=now() where warnid=%s" %(kwages['id'])           
         self.putData(**{'sql':sql}) 
-            
+        
+    #获取预警类型的名字        
     def getWarnTypeName(self,**kwages):
         sql="select warnname from pps_warntype where warntype='%s'"%(kwages['type'])
         temp=self.getData(**{'sql':sql})
@@ -197,7 +199,7 @@ class opMysqlObj(db.opMysqlObj):
             return(temp[0]['warnname'])
         else:
             return("未知")
-            
+    #获取环境名       
     def getEnviName(self,**kwages):
         sql="select enviname from pps_envitype where envitype='%s'"%(kwages['enviname'])
         temp=self.getData(**{'sql':sql})

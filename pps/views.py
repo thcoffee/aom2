@@ -6,11 +6,11 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import login
 from django.contrib import auth
 from aom import custom
+from . import ppsdb
 import traceback
 import simplejson
 import json
 import time
-from . import ppsdb
 import sys
 import logging
 logger = logging.getLogger("django")
