@@ -2,7 +2,7 @@
 from os import path
 from django.apps import AppConfig
 
-VERBOSE_APP_NAME = "预警信息处理系统"
+VERBOSE_APP_NAME = "容器自动部署系统"
 
 
 def get_current_app_name(file):
