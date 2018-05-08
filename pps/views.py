@@ -160,9 +160,11 @@ def _putAudJson(request):
         #如果有该条信息
         if len(warnTaskCount)!=0:
             #将消息状态变更为已处理
-            dbcon.setMessStatus(**{'fromstatus':1,'tostatus':2,'messid':request.POST.get('messid')})
+            #dbcon.setMessStatus(**{'fromstatus':1,'tostatus':2,'messid':request.POST.get('messid')})
+            for i in dbcon.getMessageId(**{'wid':request.POST.get('id')}) :           
+                dbcon.setMessStatus(**{'fromstatus':1,'tostatus':2,'messid':i['mid']}) 
             #创建一条审核意见
-            dbcon.createWarnTaskAudMess(**{'warntaskMsg':request.POST.get('warntaskMsg'),'id':request.POST.get('id',0),'status':request.POST.get('status'),'userid':dbcon.usernameToUserid(**{'username':request.user.username})})
+            dbcon.createWarnTaskAudMess(**{'warntaskMsg':request.POST.get('warntaskMsg'),'id':request.POST.get('id',0),'status':request.POST.get('status'),'userid':request.user.id})
             #如果同意
             if request.POST.get('status')=='1':
                 #将预警信息标注为以处理完毕
@@ -173,10 +175,11 @@ def _putAudJson(request):
                 #给处理人重新发消息
                 dbcon.createMess(**{'activityname':'重新处理','path':'/pps/dowarn/?id='+request.POST.get('id'),'userid':dbcon.getWarnTaskUserid(**{'id':request.POST.get('id',0)})})
                 #更新预警信息对应的消息id
-                dbcon.setWarnTaskMessId(**{'lastid':dbcon.getLaseID(),'id':request.POST.get('id',0)})
+                #dbcon.setWarnTaskMessId(**{'lastid':dbcon.getLaseID(),'id':request.POST.get('id',0)})
+                dbcon.create_warntask_w2m(**{'wid':request.POST.get('id'),'mid':str(dbcon.getLaseID())})
             dbcon.commit()
             #获取预警信息对应的审核意见
-            warntaskMsg=dbcon.getWarnTaskMessS(**{'id':request.POST.get('id',0)})
+            warntaskMsg=dbcon.getWarnTaskAudMessS(**{'id':request.POST.get('id',0)})
             dbcon.close()
             return_json={'status':'true','warntaskMsg':warntaskMsg}
         else:
@@ -200,18 +203,22 @@ def _putWarnJson(request):
         #如果有该条信息
         if len(warnTaskCount)!=0:
             #如果预警级别小于3级
-            if warnTaskCount[0]['warnlevel']<6:
+            for i in dbcon.getMessageId(**{'wid':request.POST.get('id')}) :           
+                dbcon.setMessStatus(**{'fromstatus':1,'tostatus':2,'messid':i['mid']})  
+                
+            if warnTaskCount[0]['warnlevel']<3:
                 #预警信息变为待审核
-                dbcon.setWarnTaskInfo(**{'reason':request.POST.get('reason'),'measure':request.POST.get('measure'),'id':request.POST.get('id'),'status':2})
+                dbcon.setWarnTaskInfo(**{'reason':request.POST.get('reason'),'measure':request.POST.get('measure'),'id':request.POST.get('id'),'status':2,'userid':request.user.id})
                 #发出待审核消息
-                dbcon.createMess(**{'activityname':'待审核','path':'/pps/review/?id='+request.POST.get('id'),'userid':warnTaskCount[0]['auduserid']})
+                dbcon.createMess(**{'activityname':'待审核','path':'/pps/review/?id='+request.POST.get('id'),'userid':warnTaskCount[0]['auduserid']})   
                 #将将待审核消息id写入预警信息中。
-                dbcon.setWarnTaskMessId(**{'lastid':dbcon.getLaseID(),'id':request.POST.get('id')})
+                dbcon.create_warntask_w2m(**{'wid':request.POST.get('id'),'mid':str(dbcon.getLaseID())})
             else:
                 #否则直接将预警信息变更问以处理完毕。
                 dbcon.setWarnTaskInfo(**{'reason':request.POST.get('reason'),'measure':request.POST.get('measure'),'id':request.POST.get('id'),'status':3})
-            #将消息状态设置为已读。    
-            dbcon.setMessStatus(**{'fromstatus':1,'tostatus':2,'messid':request.POST.get('messid')})                
+            #将消息状态设置为已读。
+             
+                         
         dbcon.commit()
         dbcon.close()
         return_json={'status':'true'}
@@ -226,7 +233,7 @@ def _getWarnJson(request):
     dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
     #如果是处理警告信息页面 或者是查询预警信息详细页面 
     if request.POST.get('task')=='getwarn' :
-        return_json=dbcon.getWarnTask(**{'id':request.POST.get('id'),'userid':dbcon.usernameToUserid(**{'username':request.user.username})})
+        return_json=dbcon.getWarnTask(**{'id':request.POST.get('id'),'userid':request.user.id})
         return_json['warntaskMsg']=dbcon.getWarnTaskAudMess(**{'id':request.POST.get('id')})
     #如果是审核信息页面
     elif request.POST.get('task')=='getquerywarninfo':
@@ -245,7 +252,7 @@ def _getWarnJson(request):
 def _getUndoJson(request):	
     dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})	
     #获取对应用户的未处理消息
-    undoList=dbcon.getUndoMess(**{'userid':dbcon.usernameToUserid(**{'username':request.user.username})})
+    undoList=dbcon.getUndoMess(**{'userid':request.user.id})
     #分页处理
     p=custom._my_pagination(request,undoList,request.POST.get('display_num',5))
     return_json={'list':p['list'],'undo_num':len(undoList),'num_pages':p['num_pages']}	

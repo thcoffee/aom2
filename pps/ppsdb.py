@@ -1,7 +1,8 @@
 from aom import db
 import pymysql
 import time
-
+import logging
+logger = logging.getLogger("django")
 #继承db.opMysqlObj
 class opMysqlObj(db.opMysqlObj):
 
@@ -77,11 +78,11 @@ class opMysqlObj(db.opMysqlObj):
     对预警任务设置消息id,引入**kwages 
     lastid 消息id
     id  taskwarn的主键id
-    '''
+    
     def setWarnTaskMessId(self,**kwages):
         sql="update pps_warntask set messid=%s where id=%s"%(kwages['lastid'],kwages['id'])
         self.putData(**{'sql':sql})
-    '''
+    
     获取所有审核消息 ,引入**kwages 
     id  taskwarn的主键id   
     '''    
@@ -109,7 +110,7 @@ class opMysqlObj(db.opMysqlObj):
     id taskwarn的主键id  
     '''
     def setWarnTaskInfo(self,**kwages):
-        sql="update pps_warntask set reason='%s',measure='%s',writetime=now(),status=%s where status=1 and id=%s"%(pymysql.escape_string(kwages['reason']),pymysql.escape_string(kwages['measure']),kwages['status'],kwages['id'])
+        sql="update pps_warntask set reason='%s',measure='%s',writetime=now(),status=%s,userid=%s where status=1 and id=%s"%(pymysql.escape_string(kwages['reason']),pymysql.escape_string(kwages['measure']),kwages['status'],kwages['userid'],kwages['id'])
         self.putData(**{'sql':sql})
     '''    
     获取预警信息详情  ,引入**kwages 
@@ -117,7 +118,11 @@ class opMysqlObj(db.opMysqlObj):
     id  taskwarn的主键id  
     '''
     def getWarnTask(self,**kwages):
-        sql="SELECT a.id,warnid,c.warnname warntype,d.enviname,warndesc,b.levelname warnlevel,DATE_FORMAT(createtime, '%Y-%m-%d %H:%i:%s') createtime,DATE_FORMAT(recoverytime, '%Y-%m-%d %H:%i:%s') recoverytime,reason,measure,DATE_FORMAT(writetime, '%Y-%m-%d %H:%i:%s') writetime,STATUS,messid,a.userid FROM pps_warntask a LEFT JOIN  pps_warnlevel b ON a.`warnlevel`=b.level LEFT JOIN pps_warntype c ON a.warntype=c.warntype LEFT JOIN pps_envitype d ON a.enviname=d.envitype WHERE a.userid="+str(kwages['userid'])+" and a.id='"+kwages['id']+"'"
+        if kwages['userid'] is not None:
+            sql="SELECT a.id,warnid,c.warnname warntype,d.enviname,warndesc,b.levelname warnlevel,DATE_FORMAT(createtime, '%Y-%m-%d %H:%i:%s') createtime,DATE_FORMAT(recoverytime, '%Y-%m-%d %H:%i:%s') recoverytime,reason,measure,DATE_FORMAT(writetime, '%Y-%m-%d %H:%i:%s') writetime,STATUS,messid,a.userid FROM pps_warntask a LEFT JOIN  pps_warnlevel b ON a.`warnlevel`=b.level LEFT JOIN pps_warntype c ON a.warntype=c.warntype LEFT JOIN pps_envitype d ON a.enviname=d.envitype LEFT JOIN pps_warntype_userid e ON c.id=e.ppswarntype_id WHERE e.authuser_id="+str(kwages['userid'])+" and a.id='"+kwages['id']+"'"
+        else:
+            sql="SELECT a.id,warnid,c.warnname warntype,d.enviname,warndesc,b.levelname warnlevel,DATE_FORMAT(createtime, '%Y-%m-%d %H:%i:%s') createtime,DATE_FORMAT(recoverytime, '%Y-%m-%d %H:%i:%s') recoverytime,reason,measure,DATE_FORMAT(writetime, '%Y-%m-%d %H:%i:%s') writetime,STATUS,messid,a.userid FROM pps_warntask a LEFT JOIN  pps_warnlevel b ON a.`warnlevel`=b.level LEFT JOIN pps_warntype c ON a.warntype=c.warntype LEFT JOIN pps_envitype d ON a.enviname=d.envitype LEFT JOIN pps_warntype_userid e ON c.id=e.ppswarntype_id WHERE a.id='"+kwages['id']+"'"
+        logger.info(sql)
         temp=self.getData(**{'sql':sql})
         if len(temp)>0:
             return(temp[0])
@@ -162,15 +167,12 @@ class opMysqlObj(db.opMysqlObj):
             return(True)
             
     def getUserid(self,**kwages):
-        sql="select userid from pps_warntype where warntype='%s'"%(kwages['type'])
+        sql="SELECT a.`authuser_id` userid FROM pps_warntype_userid a LEFT JOIN pps_warntype b ON a.`ppswarntype_id`=b.`id` where warntype='%s'"%(kwages['type'])
         temp=self.getData(**{'sql':sql})
-        if len(temp)>0:
-            return(temp[0]['userid'])
-        else:
-            return(1)
+        return(temp)
             
     def createWarn(self,**kwages):
-        sql="insert into pps_warntask(warnid,warntype,enviname,warndesc,warnlevel,createtime,status,userid)values(%s,'%s','%s','%s','%s',now(),1,%s)"%(kwages['id'],kwages['type'],kwages['evn'],kwages['msg'],str(self.getWarnLevel(**{'levelname':kwages['level']})),kwages['userid'])
+        sql="insert into pps_warntask(warnid,warntype,enviname,warndesc,warnlevel,createtime,status)values(%s,'%s','%s','%s','%s',now(),1)"%(kwages['id'],kwages['type'],kwages['evn'],kwages['msg'],str(self.getWarnLevel(**{'levelname':kwages['level']})))
         self.putData(**{'sql':sql})   
     
     def getWarnLevel(self,**kwages):
@@ -207,3 +209,13 @@ class opMysqlObj(db.opMysqlObj):
             return(temp[0]['enviname'])
         else:
             return("未知环境")
+            
+            
+    def create_warntask_w2m(self,**kwages):      
+        sql="insert into pps_warntask_w2m (wid,mid)values(%s,%s)"%(kwages['wid'],kwages['mid'])  
+        self.putData(**{'sql':sql})  
+
+    def getMessageId(self,**kwages):
+        sql="select mid from pps_warntask_w2m where wid=%s"%(kwages['wid'])
+        temp=self.getData(**{'sql':sql})   
+        return(temp)        

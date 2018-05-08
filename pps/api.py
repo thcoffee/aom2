@@ -23,12 +23,14 @@ def api(request):
 def _puttask(**kwages):
     task=kwages['postJson']['data']
     dbcon=ppsdb.opMysqlObj(**{'dbname':'default','valueType':'dict'})
-    if dbcon.isExistsWarn(**task):
-        task['userid']=dbcon.getUserid(**task)
+    if dbcon.isExistsWarn(**task):     
         dbcon.createWarn(**task)
         task['wid']=str(dbcon.getLaseID())
-        dbcon.createWarnMsg(**task)    
-        dbcon.setWarnTaskMessId(**{'lastid':str(dbcon.getLaseID()),'id':task['wid']})
+        for i in dbcon.getUserid(**task):
+            task['userid']=i['userid']
+            dbcon.createWarnMsg(**task)
+            dbcon.create_warntask_w2m(**{'wid':task['wid'],'mid':str(dbcon.getLaseID())})            
+        #dbcon.setWarnTaskMessId(**{'lastid':str(dbcon.getLaseID()),'id':task['wid']})
     else:
         dbcon.setWarnRecoveryTime(**task)
     dbcon.commit()

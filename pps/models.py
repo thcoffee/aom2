@@ -23,7 +23,8 @@ class AuthUser(models.Model):
 class PpsWarntype(models.Model):
     warntype = models.CharField(max_length=30, blank=True, null=True,verbose_name='预警类别')
     warnname = models.CharField(max_length=30, blank=True, null=True,verbose_name='预警名字')
-    userid = models.ForeignKey(AuthUser, models.DO_NOTHING, related_name='uid',db_column='userid', blank=True, null=True,verbose_name='预警处理人')
+    userid=models.ManyToManyField(AuthUser,verbose_name='预警处理人',blank=True,null=True)
+    #userid = models.ForeignKey(AuthUser, models.DO_NOTHING, related_name='uid',db_column='userid', blank=True, null=True,verbose_name='预警处理人')
     auduserid = models.ForeignKey(AuthUser, models.DO_NOTHING, db_column='auduserid', blank=True, null=True,verbose_name='预警审核人')
     class Meta:
         managed = False
@@ -32,7 +33,7 @@ class PpsWarntype(models.Model):
         verbose_name='报警负责人设置'
     
     def __str__(self):
-        return("/".join([str(self.userid),self.warntype,self.warnname,str(self.auduserid)]))
+        return("/".join([self.warntype,self.warnname,str(self.auduserid)]))
 
 class AuthGroup(models.Model):
     name = models.CharField(unique=True, max_length=80)
