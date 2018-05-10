@@ -215,7 +215,7 @@ def _putWarnJson(request):
                 dbcon.create_warntask_w2m(**{'wid':request.POST.get('id'),'mid':str(dbcon.getLaseID())})
             else:
                 #否则直接将预警信息变更问以处理完毕。
-                dbcon.setWarnTaskInfo(**{'reason':request.POST.get('reason'),'measure':request.POST.get('measure'),'id':request.POST.get('id'),'status':3})
+                dbcon.setWarnTaskInfo(**{'reason':request.POST.get('reason'),'measure':request.POST.get('measure'),'id':request.POST.get('id'),'status':3,'userid':request.user.id})
             #将消息状态设置为已读。
              
                          
